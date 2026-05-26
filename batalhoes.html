@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard CFO | Estratégia de Lotação (V3)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0A192F;
+            --primary-light: #172a45;
+            --accent: #D4AF37;
+            --accent-hover: #e6c555;
+            --bg: #F4F7F6;
+            --surface: #FFFFFF;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+            --border: #E2E8F0;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--accent);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-titles h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.5px; }
+        .header-titles p { color: #94A3B8; font-size: 0.9rem; margin-top: 4px; }
+        
+        .header-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .container { max-width: 1350px; margin: 2rem auto; padding: 0 1.5rem; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card.accent { border-left-color: var(--accent); }
+
+        .stat-title { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        .stat-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: #F8FAFC;
+        }
+
+        .card-title { font-weight: 600; font-size: 1.1rem; color: var(--primary); margin-bottom: 1rem; }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+
+        .search-bar, .filter-select {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+            background-color: white;
+            color: var(--text-dark);
+        }
+        
+        .search-bar { width: 220px; }
+        .filter-select { min-width: 180px; font-weight: 500; cursor: pointer; }
+        .search-bar:focus, .filter-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.1); }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px 1rem; border-bottom: 1px solid var(--border); }
+        th { 
+            background: #F1F5F9; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            position: sticky; 
+            top: 0; 
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        td { font-size: 0.9rem; color: #334155; }
+        tr:hover td { background-color: #F8FAFC; }
+        
+        .table-container {
+            flex-grow: 1;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .rank-badge-geral {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 6px;
+            background: #E2E8F0; color: #475569;
+            font-size: 0.8rem; font-weight: 700;
+        }
+
+        .rank-badge-unidade {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--primary); color: white;
+            font-size: 0.8rem; font-weight: 700;
+        }
+        .top-rank .rank-badge-unidade { background: var(--accent); color: var(--primary); }
+
+        .op-badge {
+            display: inline-block; padding: 4px 8px; border-radius: 6px;
+            font-size: 0.75rem; font-weight: 600;
+            background: #F1F5F9; color: #64748B;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        /* Destaques visuais */
+        .highlight-primary { background: #DBEAFE; color: #1D4ED8; border-color: #BFDBFE; }
+        .highlight-match { background: #FEF08A; color: #854D0E; border-color: #FDE047; transform: scale(1.05); font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        /* Chart */
+        .chart-container { padding: 1.5rem; overflow-y: auto; max-height: 600px; }
+        .bar-row { margin-bottom: 12px; }
+        .bar-label { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
+        .bar-bg { width: 100%; height: 10px; background: #E2E8F0; border-radius: 6px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--primary); border-radius: 6px; transition: width 0.8s ease-out; }
+        .bar-row:nth-child(1) .bar-fill, .bar-row:nth-child(2) .bar-fill, .bar-row:nth-child(3) .bar-fill { background: var(--accent); } /* Top 3 batalhões em destaque */
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-titles">
+            <h1>Painel de Lotação Estratégica</h1>
+            <p>APMP - PMPE • Aspirantes 2026</p>
+        </div>
+        <div class="header-badge">
+            Turma CFO
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Alunos Visualizados</div>
+                <div class="stat-value" id="statCount">0</div>
+                <div class="stat-desc">de <span id="statTotal">0</span> na turma</div>
+            </div>
+            <div class="stat-card accent">
+                <div class="stat-title">Maior Nota Filtrada</div>
+                <div class="stat-value" id="statMaxNota">0.000</div>
+                <div class="stat-desc" id="statMaxDesc">Teto do corte atual</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Unidade Mais Disputada (1ª Op)</div>
+                <div class="stat-value" style="font-size: 1.5rem;" id="statTopBpm">-</div>
+                <div class="stat-desc" id="statTopBpmCount">-</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            
+            <!-- Table Section -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Classificação e Concorrência Direta</div>
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label>Batalhão Alvo</label>
+                            <select id="batalhaoFilter" class="filter-select">
+                                <option value="ALL">📍 Todos os Batalhões</option>
+                                <!-- Preenchido por JS -->
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Prioridade da Escolha</label>
+                            <select id="prioridadeFilter" class="filter-select">
+                                <option value="ALL">Qualquer Opção (1ª, 2ª ou 3ª)</option>
+                                <option value="1">Apenas 1ª Opção</option>
+                                <option value="2">Apenas 2ª Opção</option>
+                                <option value="3">Apenas 3ª Opção</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Buscar</label>
+                            <input type="text" id="searchInput" class="search-bar" placeholder="Nome de Guerra...">
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="dataTable">
+                        <thead>
+                            <tr>
+                                <th title="Posição Geral na Turma">Geral</th>
+                                <th title="Posição dinâmica dentro deste batalhão/filtro">Pos. Unidade</th>
+                                <th>Nome de Guerra</th>
+                                <th>Nota</th>
+                                <th>1ª Opção</th>
+                                <th>2ª Opção</th>
+                                <th>3ª Opção</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sidebar / Charts -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title" style="margin-bottom: 0;">Demanda Geral (1ª Opção)</div>
+                </div>
+                <div class="chart-container" id="chartContainer">
+                    <!-- JS -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        Gestão Estratégica de Lotação - Desenvolvido para o CFO PMPE
+    </footer>
+
+    <script>
+        const rawData = [{"rank": 1, "nome": "MACIEL", "nota": 9.814, "op1": "20\u00b0 BPM", "op2": "-", "op3": "-"}, {"rank": 2, "nome": "VICTOR FERREIRA", "nota": 9.804, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 3, "nome": "ERIKA DUARTE", "nota": 9.767, "op1": "25\u00b0 BPM", "op2": "19\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 4, "nome": "PEREIRA", "nota": 9.765, "op1": "17\u00b0 BPM", "op2": "BPTUR", "op3": "20\u00b0 BPM"}, {"rank": 5, "nome": "RA\u00cdSSA SOARES", "nota": 9.759, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 6, "nome": "D\u00c9BORA GOUVEIA", "nota": 9.753, "op1": "19\u00b0 BPM", "op2": "13\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 7, "nome": "DANIELLE PRADO", "nota": 9.752, "op1": "20\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 8, "nome": "R. FERREIRA", "nota": 9.738, "op1": "12\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "20\u00b0 BPM"}, {"rank": 9, "nome": "MEIRA", "nota": 9.732, "op1": "17\u00b0 BPM", "op2": "20\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 10, "nome": "MURILO", "nota": 9.722, "op1": "18\u00b0 BPM", "op2": "20\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 11, "nome": "FRAN\u00c7A", "nota": 9.716, "op1": "BPTUR", "op2": "1\u00b0 BPM", "op3": "17\u00b0 BPM"}, {"rank": 12, "nome": "F\u00c1TIMA AGUIAR", "nota": 9.713, "op1": "17\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 13, "nome": "PRISCILA CORREIA", "nota": 9.705, "op1": "26\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "-"}, {"rank": 14, "nome": "NONATO", "nota": 9.69, "op1": "6\u00b0 BPM", "op2": "18\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 15, "nome": "RHAYSA", "nota": 9.687, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 16, "nome": "HIAGO", "nota": 9.687, "op1": "12\u00b0 BPM", "op2": "13\u00b0 BPM", "op3": "17\u00b0 BPM"}, {"rank": 17, "nome": "S.GOMES", "nota": 9.687, "op1": "20\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 18, "nome": "PAULO ROBERTO", "nota": 9.687, "op1": "20\u00b0 BPM", "op2": "-", "op3": "-"}, {"rank": 19, "nome": "BRUNO", "nota": 9.683, "op1": "17\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 20, "nome": "HIGOR ALVES", "nota": 9.677, "op1": "25\u00b0 BPM", "op2": "20\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 21, "nome": "S\u00c9RGIO", "nota": 9.677, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 22, "nome": "DAYANE", "nota": 9.675, "op1": "19\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "16\u00b0 BPM"}, {"rank": 23, "nome": "ICARO", "nota": 9.671, "op1": "13\u00b0 BPM", "op2": "18\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 24, "nome": "CAVALCANTI", "nota": 9.671, "op1": "26\u00b0 BPM", "op2": "26\u00b0 BPM", "op3": "26\u00b0 BPM"}, {"rank": 25, "nome": "GABRIEL", "nota": 9.671, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 26, "nome": "N\u00d3BREGA", "nota": 9.67, "op1": "BPTUR", "op2": "13\u00b0 BPM", "op3": "17\u00b0 BPM"}, {"rank": 27, "nome": "BONFIM", "nota": 9.664, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "18\u00b0 BPM"}, {"rank": 28, "nome": "J\u00daLIA", "nota": 9.658, "op1": "13\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "BPTUR"}, {"rank": 29, "nome": "KAYO GABRIEL", "nota": 9.658, "op1": "12\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 30, "nome": "JUNIOR", "nota": 9.652, "op1": "26\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 31, "nome": "JHONEY", "nota": 9.651, "op1": "12\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 32, "nome": "QUEIROZ", "nota": 9.65, "op1": "BPTUR", "op2": "13\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 33, "nome": "MARCOS NASCIMENTO", "nota": 9.647, "op1": "13\u00b0 BPM", "op2": "16\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 34, "nome": "AUREA", "nota": 9.645, "op1": "17\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "26\u00b0 BPM"}, {"rank": 35, "nome": "M ALBUQUERQUE", "nota": 9.641, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 36, "nome": "LAYANNE", "nota": 9.64, "op1": "19\u00b0 BPM", "op2": "16\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 37, "nome": "IURY", "nota": 9.631, "op1": "BPTUR", "op2": "17\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 38, "nome": "KAROLINNE MOREIRA", "nota": 9.629, "op1": "13\u00b0 BPM", "op2": "20\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 39, "nome": "LEMOS", "nota": 9.627, "op1": "12\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "20\u00b0 BPM"}, {"rank": 40, "nome": "THIAGO TAVARES", "nota": 9.621, "op1": "20\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 41, "nome": "VIN\u00cdCIUS SOUZA", "nota": 9.621, "op1": "20\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 42, "nome": "W", "nota": 9.621, "op1": "16\u00b0 BPM", "op2": "13\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 43, "nome": "CARLA ARA\u00daJO", "nota": 9.619, "op1": "13\u00b0 BPM", "op2": "16\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 44, "nome": "THIAGO TAVARES", "nota": 9.617, "op1": "20\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 45, "nome": "RENAN", "nota": 9.615, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "18\u00b0 BPM"}, {"rank": 46, "nome": "ABRA\u00c3O", "nota": 9.615, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "26\u00b0 BPM"}, {"rank": 47, "nome": "RENAN", "nota": 9.615, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "18\u00b0 BPM"}, {"rank": 48, "nome": "HEYVERSON", "nota": 9.612, "op1": "6\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 49, "nome": "VALDECI", "nota": 9.609, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 50, "nome": "MANOEL", "nota": 9.606, "op1": "19\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "6\u00b0 BPM"}, {"rank": 51, "nome": "MANOEL", "nota": 9.606, "op1": "6\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 52, "nome": "SERAFIM", "nota": 9.598, "op1": "25\u00b0 BPM", "op2": "18\u00b0 BPM", "op3": "20\u00b0 BPM"}, {"rank": 53, "nome": "PATRICIA", "nota": 9.595, "op1": "20\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 54, "nome": "AMANDA COELHO", "nota": 9.595, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 55, "nome": "GONZAGA", "nota": 9.593, "op1": "6\u00b0 BPM", "op2": "19\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 56, "nome": "GUSTAVO", "nota": 9.593, "op1": "26\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "1\u00b0 BPM"}, {"rank": 57, "nome": "ALENCAR", "nota": 9.592, "op1": "26\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 58, "nome": "RENATO L", "nota": 9.592, "op1": "20\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 59, "nome": "KAROLINE ABREU", "nota": 9.588, "op1": "17\u00b0 BPM", "op2": "13\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 60, "nome": "PAULO", "nota": 9.586, "op1": "20\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "17\u00b0 BPM"}, {"rank": 61, "nome": "JOS\u00c9 NETO", "nota": 9.586, "op1": "19\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "18\u00b0 BPM"}, {"rank": 62, "nome": "JOSE ALISSON", "nota": 9.58, "op1": "20\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 63, "nome": "BARBALHO", "nota": 9.579, "op1": "17\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "26\u00b0 BPM"}, {"rank": 64, "nome": "LUCIANO", "nota": 9.579, "op1": "17\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 65, "nome": "RAYANNE", "nota": 9.576, "op1": "18\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "20\u00b0 BPM"}, {"rank": 66, "nome": "ROBERTO FREITAS", "nota": 9.565, "op1": "-", "op2": "-", "op3": "-"}, {"rank": 67, "nome": "FELIPE F\u00c9LIX", "nota": 9.562, "op1": "18\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 68, "nome": "RAFAEL PEREIRA", "nota": 9.56, "op1": "BPTUR", "op2": "17\u00b0 BPM", "op3": "1\u00b0 BPM"}, {"rank": 69, "nome": "SAMARA MELO", "nota": 9.557, "op1": "19\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "16\u00b0 BPM"}, {"rank": 70, "nome": "JOSINALDO", "nota": 9.557, "op1": "25\u00b0 BPM", "op2": "20\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 71, "nome": "SAMARA MELO", "nota": 9.557, "op1": "19\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "16\u00b0 BPM"}, {"rank": 72, "nome": "CARDOSO", "nota": 9.557, "op1": "18\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 73, "nome": "BELEM", "nota": 9.556, "op1": "13\u00b0 BPM", "op2": "19\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 74, "nome": "BELEM", "nota": 9.556, "op1": "13\u00b0 BPM", "op2": "19\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 75, "nome": "WESLEY", "nota": 9.555, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 76, "nome": "BATISTA", "nota": 9.553, "op1": "13\u00b0 BPM", "op2": "BPTUR", "op3": "1\u00b0 BPM"}, {"rank": 77, "nome": "FELIPE MORAIS", "nota": 9.55, "op1": "25\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 78, "nome": "DI\u00d3GENES", "nota": 9.545, "op1": "12\u00b0 BPM", "op2": "13\u00b0 BPM", "op3": "16\u00b0 BPM"}, {"rank": 79, "nome": "FERNANDO CRUZ", "nota": 9.544, "op1": "17\u00b0 BPM", "op2": "26\u00b0 BPM", "op3": "1\u00b0 BPM"}, {"rank": 80, "nome": "FERNANDO", "nota": 9.542, "op1": "25\u00b0 BPM", "op2": "20\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 81, "nome": "WALYSON", "nota": 9.537, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 82, "nome": "G. SILVA", "nota": 9.536, "op1": "1\u00b0 BPM", "op2": "18\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 83, "nome": "LUCAS MAGALH\u00c3ES", "nota": 9.536, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 84, "nome": "FERREIRA", "nota": 9.536, "op1": "6\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "BPTUR"}, {"rank": 85, "nome": "VINICIUS OLIVEIRA", "nota": 9.53, "op1": "26\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 86, "nome": "VINICIUS OLIVEIRA", "nota": 9.53, "op1": "26\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 87, "nome": "ALLATAS SOUSA", "nota": 9.526, "op1": "13\u00b0 BPM", "op2": "19\u00b0 BPM", "op3": "16\u00b0 BPM"}, {"rank": 88, "nome": "PEDRO", "nota": 9.525, "op1": "12\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 89, "nome": "P.SOUZA", "nota": 9.524, "op1": "11\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "20\u00b0 BPM"}, {"rank": 90, "nome": "GISELE FERREIRA", "nota": 9.523, "op1": "13\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 91, "nome": "OLIVEIRA J\u00daNIOR", "nota": 9.521, "op1": "12\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 92, "nome": "JORGE FILHO", "nota": 9.52, "op1": "18\u00b0 BPM", "op2": "BPTUR", "op3": "6\u00b0 BPM"}, {"rank": 93, "nome": "S. NETO", "nota": 9.516, "op1": "20\u00b0 BPM", "op2": "BPTUR", "op3": "19\u00b0 BPM"}, {"rank": 94, "nome": "LEONAM", "nota": 9.514, "op1": "26\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 95, "nome": "FERNANDA SOARES", "nota": 9.514, "op1": "12\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "6\u00b0 BPM"}, {"rank": 96, "nome": "ELVIS", "nota": 9.514, "op1": "25\u00b0 BPM", "op2": "20\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 97, "nome": "ARYANA", "nota": 9.512, "op1": "25\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 98, "nome": "LEONAM", "nota": 9.51, "op1": "26\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 99, "nome": "KAMYLA", "nota": 9.507, "op1": "13\u00b0 BPM", "op2": "16\u00b0 BPM", "op3": "BPTUR"}, {"rank": 100, "nome": "JULIO", "nota": 9.502, "op1": "BPTUR", "op2": "BPTUR", "op3": "BPTUR"}, {"rank": 101, "nome": "ORLANDO", "nota": 9.501, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 102, "nome": "ERIVELTON", "nota": 9.501, "op1": "17\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 103, "nome": "SIDNEI ARA\u00daJO", "nota": 9.499, "op1": "1\u00b0 BPM", "op2": "13\u00b0 BPM", "op3": "17\u00b0 BPM"}, {"rank": 104, "nome": "GESSICA", "nota": 9.498, "op1": "1\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 105, "nome": "MARCOLINO", "nota": 9.497, "op1": "26\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "BPTUR"}, {"rank": 106, "nome": "ISABELLA", "nota": 9.495, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 107, "nome": "AUR\u00c9LIO", "nota": 9.494, "op1": "6\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 108, "nome": "GIOVANNI", "nota": 9.491, "op1": "20\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 109, "nome": "REVERTHON", "nota": 9.49, "op1": "6\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 110, "nome": "VICTOR COSTA", "nota": 9.483, "op1": "1\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "26\u00b0 BPM"}, {"rank": 111, "nome": "EMANNUEL", "nota": 9.481, "op1": "12\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 112, "nome": "MATHEUS BARROS", "nota": 9.481, "op1": "6\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 113, "nome": "C\u00c9SAR MEDEIROS", "nota": 9.477, "op1": "20\u00b0 BPM", "op2": "13\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 114, "nome": "G.GOMES", "nota": 9.475, "op1": "1\u00b0 BPM", "op2": "17\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 115, "nome": "SOUTO", "nota": 9.475, "op1": "19\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 116, "nome": "ISRAEL OLIVEIRA", "nota": 9.461, "op1": "26\u00b0 BPM", "op2": "BPTUR", "op3": "17\u00b0 BPM"}, {"rank": 117, "nome": "DIONIZIO", "nota": 9.4569, "op1": "1\u00b0 BPM", "op2": "26\u00b0 BPM", "op3": "16\u00b0 BPM"}, {"rank": 118, "nome": "RUBSLEY", "nota": 9.456, "op1": "6\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 119, "nome": "JEFERSON SILVA", "nota": 9.446, "op1": "25\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "18\u00b0 BPM"}, {"rank": 120, "nome": "ANDERSON", "nota": 9.439, "op1": "1\u00b0 BPM", "op2": "13\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 121, "nome": "MARCIO SOUZA", "nota": 9.438, "op1": "25\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "6\u00b0 BPM"}, {"rank": 122, "nome": "SILVANA", "nota": 9.432, "op1": "13\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 123, "nome": "ALINE", "nota": 9.427, "op1": "17\u00b0 BPM", "op2": "26\u00b0 BPM", "op3": "1\u00b0 BPM"}, {"rank": 124, "nome": "RENATA", "nota": 9.427, "op1": "1\u00b0 BPM", "op2": "26\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 125, "nome": "LUAN PEREIRA", "nota": 9.419, "op1": "25\u00b0 BPM", "op2": "18\u00b0 BPM", "op3": "-"}, {"rank": 126, "nome": "MARQUES", "nota": 9.419, "op1": "6\u00b0 BPM", "op2": "19\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 127, "nome": "FIRMINO", "nota": 9.4067, "op1": "13\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "6\u00b0 BPM"}, {"rank": 128, "nome": "CIBELE", "nota": 9.401, "op1": "1\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "26\u00b0 BPM"}, {"rank": 129, "nome": "KLEVER", "nota": 9.4, "op1": "20\u00b0 BPM", "op2": "25\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 130, "nome": "DURVAL", "nota": 9.4, "op1": "13\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 131, "nome": "MOURA", "nota": 9.4, "op1": "20\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 132, "nome": "JOAO NASCIMENTO", "nota": 9.394, "op1": "6\u00b0 BPM", "op2": "19\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 133, "nome": "SELTON", "nota": 9.388, "op1": "25\u00b0 BPM", "op2": "19\u00b0 BPM", "op3": "16\u00b0 BPM"}, {"rank": 134, "nome": "JULIANA GONDIM", "nota": 9.386, "op1": "12\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 135, "nome": "\u00cdTALO", "nota": 9.383, "op1": "18\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "1\u00b0 BPM"}, {"rank": 136, "nome": "LUIZ NUNES", "nota": 9.359, "op1": "1\u00b0 BPM", "op2": "6\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 137, "nome": "SILVA", "nota": 9.352, "op1": "25\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "18\u00b0 BPM"}, {"rank": 138, "nome": "FRANCISCO", "nota": 9.348, "op1": "17\u00b0 BPM", "op2": "26\u00b0 BPM", "op3": "BPTUR"}, {"rank": 139, "nome": "GILMARA", "nota": 9.343, "op1": "26\u00b0 BPM", "op2": "1\u00b0 BPM", "op3": "13\u00b0 BPM"}, {"rank": 140, "nome": "AFONSO", "nota": 9.335, "op1": "18\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "16\u00b0 BPM"}, {"rank": 141, "nome": "JOS\u00c9", "nota": 9.3323, "op1": "6\u00b0 BPM", "op2": "19\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 142, "nome": "SANTANA", "nota": 9.315, "op1": "12\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "16\u00b0 BPM"}, {"rank": 143, "nome": "ALLAN MARIANO", "nota": 9.307, "op1": "13\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "BPTUR"}, {"rank": 144, "nome": "ANTONIO", "nota": 9.3, "op1": "BPTUR", "op2": "12\u00b0 BPM", "op3": "17\u00b0 BPM"}, {"rank": 145, "nome": "BRENDA", "nota": 9.254, "op1": "17\u00b0 BPM", "op2": "13\u00b0 BPM", "op3": "11\u00b0 BPM"}, {"rank": 146, "nome": "LUIZ LEAL", "nota": 9.235, "op1": "12\u00b0 BPM", "op2": "12\u00b0 BPM", "op3": "25\u00b0 BPM"}, {"rank": 147, "nome": "NAT\u00c1LIA", "nota": 9.102, "op1": "18\u00b0 BPM", "op2": "16\u00b0 BPM", "op3": "12\u00b0 BPM"}, {"rank": 148, "nome": "JAILTON", "nota": 9.069, "op1": "12\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "19\u00b0 BPM"}, {"rank": 149, "nome": "CAIO GUIMAR\u00c3ES", "nota": 9.043, "op1": "13\u00b0 BPM", "op2": "11\u00b0 BPM", "op3": "12\u00b0 BPM"}];
+        
+        // Elementos
+        const tableBody = document.getElementById('tableBody');
+        const searchInput = document.getElementById('searchInput');
+        const batalhaoFilter = document.getElementById('batalhaoFilter');
+        const prioridadeFilter = document.getElementById('prioridadeFilter');
+        
+        // Stats elements
+        const statCount = document.getElementById('statCount');
+        const statTotal = document.getElementById('statTotal');
+        const statMaxNota = document.getElementById('statMaxNota');
+        const statTopBpm = document.getElementById('statTopBpm');
+        const statTopBpmCount = document.getElementById('statTopBpmCount');
+        const chartContainer = document.getElementById('chartContainer');
+
+        statTotal.textContent = rawData.length;
+
+        // Extrair batalhões únicos
+        const batalhoesSet = new Set();
+        rawData.forEach(row => {
+            if(row.op1 && row.op1 !== '-') batalhoesSet.add(row.op1);
+            if(row.op2 && row.op2 !== '-') batalhoesSet.add(row.op2);
+            if(row.op3 && row.op3 !== '-') batalhoesSet.add(row.op3);
+        });
+        
+        const batalhoesList = Array.from(batalhoesSet).sort((a, b) => {
+            const numA = parseInt(a); const numB = parseInt(b);
+            if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+            return a.localeCompare(b);
+        });
+
+        batalhoesList.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b; opt.textContent = b;
+            batalhaoFilter.appendChild(opt);
+        });
+
+        // Renderizar Gráfico Fixo (Macro)
+        function renderMacroChart() {
+            const counts = {};
+            rawData.forEach(row => {
+                if(row.op1 && row.op1 !== '-') {
+                    counts[row.op1] = (counts[row.op1] || 0) + 1;
+                }
+            });
+
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            const maxCount = sorted[0] ? sorted[0][1] : 1;
+
+            if(sorted.length > 0) {
+                statTopBpm.textContent = sorted[0][0];
+                statTopBpmCount.textContent = sorted[0][1] + " escolhas";
+            }
+
+            chartContainer.innerHTML = '';
+            sorted.forEach(([bpm, count]) => {
+                const percentage = (count / maxCount) * 100;
+                chartContainer.innerHTML += `
+                    <div class="bar-row">
+                        <div class="bar-label">
+                            <span>${bpm}</span>
+                            <span>${count}</span>
+                        </div>
+                        <div class="bar-bg">
+                            <div class="bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Renderizar Tabela com Lógica
+        function applyFilters() {
+            const term = searchInput.value.toLowerCase();
+            const selectedBpm = batalhaoFilter.value;
+            const prioridade = prioridadeFilter.value;
+
+            // Filtragem
+            let filtered = rawData.filter(row => {
+                const matchesSearch = row.nome.toLowerCase().includes(term);
+                let matchesBpm = true;
+                
+                if (selectedBpm !== 'ALL') {
+                    if (prioridade === 'ALL') {
+                        matchesBpm = (row.op1 === selectedBpm || row.op2 === selectedBpm || row.op3 === selectedBpm);
+                    } else if (prioridade === '1') {
+                        matchesBpm = (row.op1 === selectedBpm);
+                    } else if (prioridade === '2') {
+                        matchesBpm = (row.op2 === selectedBpm);
+                    } else if (prioridade === '3') {
+                        matchesBpm = (row.op3 === selectedBpm);
+                    }
+                }
+
+                return matchesSearch && matchesBpm;
+            });
+
+            // Atualizar Stats
+            statCount.textContent = filtered.length;
+            if (filtered.length > 0) {
+                // Array já está ordenado por nota do maior pro menor, então a nota do index 0 é a maior
+                statMaxNota.textContent = filtered[0].nota.toFixed(3);
+            } else {
+                statMaxNota.textContent = "0.000";
+            }
+
+            // Renderizar
+            tableBody.innerHTML = '';
+            if (filtered.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748B; padding: 3rem;">Nenhum aluno encontrado para este filtro.</td></tr>';
+                return;
+            }
+
+            filtered.forEach((row, index) => {
+                // Posição dinâmica na unidade
+                const posUnidade = index + 1;
+                const isTopClass = posUnidade <= 3 ? 'top-rank' : '';
+                
+                // Highlight logic
+                let classOp1 = row.op1 !== '-' ? 'highlight-primary' : '';
+                let classOp2 = '';
+                let classOp3 = '';
+
+                if (selectedBpm !== 'ALL') {
+                    if (row.op1 === selectedBpm) classOp1 = 'highlight-match';
+                    if (row.op2 === selectedBpm) classOp2 = 'highlight-match';
+                    if (row.op3 === selectedBpm) classOp3 = 'highlight-match';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = isTopClass;
+                tr.innerHTML = `
+                    <td style="text-align: center;"><span class="rank-badge-geral" title="Geral: ${row.rank}º">${row.rank}</span></td>
+                    <td style="text-align: center;"><span class="rank-badge-unidade" title="Na Unidade: ${posUnidade}º">${posUnidade}</span></td>
+                    <td style="font-weight: 600;">${row.nome}</td>
+                    <td style="font-weight: 500;">${row.nota.toFixed(3)}</td>
+                    <td><span class="op-badge ${classOp1}">${row.op1}</span></td>
+                    <td><span class="op-badge ${classOp2}">${row.op2}</span></td>
+                    <td><span class="op-badge ${classOp3}">${row.op3}</span></td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Listeners
+        searchInput.addEventListener('input', applyFilters);
+        batalhaoFilter.addEventListener('change', applyFilters);
+        prioridadeFilter.addEventListener('change', applyFilters);
+
+        // Init
+        renderMacroChart();
+        applyFilters();
+    </script>
+</body>
+</html>
